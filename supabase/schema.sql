@@ -1,0 +1,1 @@
+-- Placeholder for Supabase schema (zones, advisories, installations).
