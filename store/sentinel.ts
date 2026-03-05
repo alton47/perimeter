@@ -1,9 +1,9 @@
 export type ViewMode = "map" | "globe";
 
-export interface SentinelState {
+export interface PerimeterState {
   viewMode: ViewMode;
 }
 
-export const sentinelStore: SentinelState = {
+export const perimeterStore: PerimeterState = {
   viewMode: "map",
 };
