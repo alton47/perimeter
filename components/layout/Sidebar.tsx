@@ -140,7 +140,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`fixed left-0 top-9 bottom-0 z-20 w-[280px] flex flex-col
+      className={`fixed left-0 top-9 bottom-0 z-20 w-70 flex flex-col
         border-r border-white/10
         transition-transform duration-300 ease-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
