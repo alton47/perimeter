@@ -19,3 +19,37 @@ body {
   overflow: hidden;
   background: #080c14;
 }
+
+@layer utilities {
+  .text-risk-safe {
+    color: var(--risk-safe);
+  }
+  .text-risk-green {
+    color: var(--risk-green);
+  }
+  .text-risk-yellow {
+    color: var(--risk-yellow);
+  }
+  .text-risk-red {
+    color: var(--risk-red);
+  }
+  .text-risk-critical {
+    color: var(--risk-critical);
+  }
+
+  .bg-risk-safe {
+    background: var(--risk-safe);
+  }
+  .bg-risk-green {
+    background: var(--risk-green);
+  }
+  .bg-risk-yellow {
+    background: var(--risk-yellow);
+  }
+  .bg-risk-red {
+    background: var(--risk-red);
+  }
+  .bg-risk-critical {
+    background: var(--risk-critical);
+  }
+}
