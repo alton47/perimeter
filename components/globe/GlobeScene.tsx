@@ -143,3 +143,80 @@ const CONTINENT_OUTLINES: Array<Array<[number, number]>> = [
     [12, 44],
   ],
 ];
+
+function ContinentLines() {
+  const geoms = useMemo(
+    () =>
+      CONTINENT_OUTLINES.map((poly) => {
+        const pts = poly.map(([lat, lng]) => ll2v(lat, lng, 1.001));
+        return new THREE.BufferGeometry().setFromPoints(pts);
+      }),
+    [],
+  );
+
+  return (
+    <group>
+      {geoms.map((g, i) => (
+        <line key={i}>
+          <primitive object={g} attach="geometry" />
+          <lineBasicMaterial
+            color="#4a6080"
+            transparent
+            opacity={0.55}
+            linewidth={1}
+          />
+        </line>
+      ))}
+    </group>
+  );
+}
+
+// ─── Lat/Lng grid ────────────────────────────────────────────────────────────
+function GlobeGrid() {
+  const geoms = useMemo(() => {
+    const result: THREE.BufferGeometry[] = [];
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const pts: THREE.Vector3[] = [];
+      for (let lng = -180; lng <= 180; lng += 4)
+        pts.push(ll2v(lat, lng, 1.002));
+      result.push(new THREE.BufferGeometry().setFromPoints(pts));
+    }
+    for (let lng = -180; lng < 180; lng += 30) {
+      const pts: THREE.Vector3[] = [];
+      for (let lat = -90; lat <= 90; lat += 4) pts.push(ll2v(lat, lng, 1.002));
+      result.push(new THREE.BufferGeometry().setFromPoints(pts));
+    }
+    return result;
+  }, []);
+  return (
+    <group>
+      {geoms.map((g, i) => (
+        <line key={i}>
+          <primitive object={g} attach="geometry" />
+          <lineBasicMaterial color="#1e3a5a" transparent opacity={0.4} />
+        </line>
+      ))}
+    </group>
+  );
+}
+
+// ─── Earth — much brighter ocean, visible landmass tint ──────────────────────
+function Earth({ paused }: { paused: boolean }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame((_, d) => {
+    if (ref.current && !paused) ref.current.rotation.y += d * 0.04;
+  });
+  return (
+    <mesh ref={ref} receiveShadow>
+      <sphereGeometry args={[1, 80, 80]} />
+      {/* Noticeably brighter ocean-blue globe */}
+      <meshPhongMaterial
+        color="#0d2a44" // visible ocean blue
+        emissive="#0a1e30" // strong emissive so it's never black
+        emissiveIntensity={0.6}
+        specular="#2a6090"
+        shininess={20}
+      />
+    </mesh>
+  );
+}
