@@ -22,12 +22,10 @@ export default function HomePage() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden">
-      {/* Globe — full bleed background */}
       <div className="absolute inset-0">
         <GlobeScene />
       </div>
 
-      {/* Chrome */}
       <StatusBar />
       <Header />
       <Sidebar />
@@ -35,11 +33,9 @@ export default function HomePage() {
       <BottomSheet />
       <Disclaimer />
 
-      {/* Modals */}
       <LocationModal />
       <ShareModal />
 
-      {/* Toasts */}
       <Toast />
     </main>
   );

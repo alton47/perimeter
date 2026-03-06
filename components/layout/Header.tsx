@@ -53,7 +53,7 @@ export function Header() {
           onClick={() => setShareModalOpen(true)}
           className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg border border-white/15
             bg-[#0d1520]/90 backdrop-blur-xl text-white/55 text-[10px] font-mono uppercase tracking-wider
-            hover:text-white hover:border-white/30 transition-all shadow-lg shadow-black/40"
+            hover:text-white hover:border-white/30 transition-all shadow-lg shadow-black/40 cursor-pointer"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <circle
