@@ -31,7 +31,7 @@ export function RightPanel() {
   if (!selectedZone) {
     return (
       <aside
-        className="hidden lg:flex fixed right-0 top-9 bottom-0 z-20 w-[300px] flex-col border-l border-white/10"
+        className="hidden lg:flex fixed right-0 top-9 bottom-0 z-20 w-75 flex-col border-l border-white/10"
         style={{ background: "#0d1520ee", backdropFilter: "blur(20px)" }}
       >
         <div className="pt-16 px-5 pb-4 border-b border-white/10">
@@ -93,7 +93,7 @@ export function RightPanel() {
 
   return (
     <aside
-      className="hidden lg:flex fixed right-0 top-9 bottom-0 z-20 w-[300px] flex-col border-l border-white/10 overflow-y-auto"
+      className="hidden lg:flex fixed right-0 top-9 bottom-0 z-20 w-75 flex-col border-l border-white/10 overflow-y-auto"
       style={{ background: "#0d1520ee", backdropFilter: "blur(20px)" }}
     >
       {/* Zone header */}
