@@ -39,6 +39,13 @@ body {
 }
 
 @layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
   .text-risk-safe {
     color: var(--risk-safe);
   }
@@ -70,4 +77,24 @@ body {
   .bg-risk-critical {
     background: var(--risk-critical);
   }
+}
+
+/* ── Skeleton shimmer ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+/* ── z helpers ── */
+.z-25 {
+  z-index: 25;
+}
+.z-60 {
+  z-index: 60;
 }
