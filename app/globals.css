@@ -1,6 +1,9 @@
+@import url("https://fonts.googleapis.com");
 @import "tailwindcss";
 
 :root {
+  --font-mono: "JetBrains Mono", "Space Mono", monospace;
+  --font-display: "Syne", sans-serif;
   --risk-safe: #4d9fff;
   --risk-green: #00e87a;
   --risk-yellow: #f5a623;
