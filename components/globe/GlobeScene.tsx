@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useMemo, Suspense } from "react";
+import { useRef, useMemo, Suspense, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -327,7 +327,10 @@ function Particles() {
 // ─── Arc between two zones ─────────────────────────────────────────────────
 function RiskArc({ from, to }: { from: Zone; to: Zone }) {
   const dotRef = useRef<THREE.Mesh>(null);
-  const pct = useRef(Math.random());
+
+  const [initialPct] = useState(() => Math.random());
+  const pct = useRef(initialPct);
+
   const color = RISK_COLORS[from.risk_level];
   const { curve, pts } = useMemo(() => {
     const a = ll2v(from.center.lat, from.center.lng);
