@@ -27,6 +27,8 @@ export const metadata: Metadata = {
     "conflict zones",
   ],
   authors: [{ name: "Perimeter" }],
+  // No manifest / no apple-mobile-web-app-capable — fixes console warnings
+
   openGraph: {
     title: "Perimeter — Geopolitical Risk Monitor",
     description:
