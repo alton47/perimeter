@@ -220,3 +220,106 @@ function Earth({ paused }: { paused: boolean }) {
     </mesh>
   );
 }
+
+// ─── Middle East region highlight (amber tint on surface) ────────────────────
+function MiddleEastHighlight() {
+  // Draw a visible filled region over Middle East using many small circles
+  const meshes = useMemo(() => {
+    const pts: Array<{ lat: number; lng: number }> = [];
+    for (let lat = 13; lat <= 40; lat += 3) {
+      for (let lng = 27; lng <= 63; lng += 3) {
+        pts.push({ lat, lng });
+      }
+    }
+    return pts;
+  }, []);
+
+  return (
+    <group>
+      {meshes.map((p, i) => {
+        const pos = ll2v(p.lat, p.lng, 1.001);
+        const q = outQ(p.lat, p.lng);
+        return (
+          <mesh key={i} position={pos} quaternion={q}>
+            <circleGeometry args={[0.028, 8]} />
+            <meshBasicMaterial
+              color="#c47a00"
+              transparent
+              opacity={0.09}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// ─── Atmosphere ───────────────────────────────────────────────────────────────
+function Atmosphere() {
+  return (
+    <>
+      <mesh>
+        <sphereGeometry args={[1.025, 32, 32]} />
+        <meshBasicMaterial
+          color="#1a6fcc"
+          transparent
+          opacity={0.06}
+          side={THREE.BackSide}
+        />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[1.065, 32, 32]} />
+        <meshBasicMaterial
+          color="#0a2244"
+          transparent
+          opacity={0.08}
+          side={THREE.BackSide}
+        />
+      </mesh>
+    </>
+  );
+}
+
+// ─── Particles ────────────────────────────────────────────────────────────────
+function Particles() {
+  const ref = useRef<THREE.Points>(null);
+  const N = 2000;
+  const { pos, col } = useMemo(() => {
+    const pos = new Float32Array(N * 3);
+    const col = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const r = 2.2 + Math.random() * 4;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      pos[i * 3 + 1] = r * Math.cos(ph);
+      pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+      col[i * 3] = 0.3 + Math.random() * 0.4;
+      col[i * 3 + 1] = 0.5 + Math.random() * 0.5;
+      col[i * 3 + 2] = 0.7 + Math.random() * 0.3;
+    }
+    return { pos, col };
+  }, []);
+  useFrame((_, d) => {
+    if (ref.current) {
+      ref.current.rotation.y += d * 0.015;
+      ref.current.rotation.x += d * 0.004;
+    }
+  });
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[pos, 3]} />
+        <bufferAttribute attach="attributes-color" args={[col, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.007}
+        vertexColors
+        transparent
+        opacity={0.7}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
