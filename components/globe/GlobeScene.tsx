@@ -323,3 +323,398 @@ function Particles() {
     </points>
   );
 }
+
+// ─── Arc between two zones ─────────────────────────────────────────────────
+function RiskArc({ from, to }: { from: Zone; to: Zone }) {
+  const dotRef = useRef<THREE.Mesh>(null);
+  const pct = useRef(Math.random());
+  const color = RISK_COLORS[from.risk_level];
+  const { curve, pts } = useMemo(() => {
+    const a = ll2v(from.center.lat, from.center.lng);
+    const b = ll2v(to.center.lat, to.center.lng);
+    const mid = a.clone().add(b).normalize().multiplyScalar(1.5);
+    const c = new THREE.QuadraticBezierCurve3(a, mid, b);
+    return { curve: c, pts: c.getPoints(80) };
+  }, [from, to]);
+  useFrame((_, d) => {
+    pct.current = (pct.current + d * 0.18) % 1;
+    if (dotRef.current)
+      dotRef.current.position.copy(curve.getPoint(pct.current));
+  });
+  return (
+    <group>
+      <line>
+        <bufferGeometry setFromPoints={pts} />
+        <lineBasicMaterial color={color} transparent opacity={0.2} />
+      </line>
+      <mesh ref={dotRef}>
+        <sphereGeometry args={[0.007, 8, 8]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+    </group>
+  );
+}
+
+// ─── Zone visual: halo + ring + pillar ─────────────────────────────────────
+function ZoneVisual({ zone, selected }: { zone: Zone; selected: boolean }) {
+  const ringRef = useRef<THREE.Mesh>(null);
+  const haloRef = useRef<THREE.Mesh>(null);
+  const pillarRef = useRef<THREE.Mesh>(null);
+  const color = RISK_COLORS[zone.risk_level];
+  const pos = ll2v(zone.center.lat, zone.center.lng, 1.003);
+  const q = outQ(zone.center.lat, zone.center.lng);
+  const scale =
+    zone.risk_level === "CRITICAL"
+      ? 0.095
+      : zone.risk_level === "RED"
+        ? 0.072
+        : 0.052;
+  const pillarH =
+    zone.risk_level === "CRITICAL"
+      ? 0.3
+      : zone.risk_level === "RED"
+        ? 0.2
+        : 0.12;
+  const pillarPos = ll2v(zone.center.lat, zone.center.lng, 1 + pillarH / 2);
+  const pillarQ = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    ll2v(zone.center.lat, zone.center.lng).normalize(),
+  );
+
+  useFrame((s) => {
+    const t = s.clock.elapsedTime;
+    const pulse =
+      1 + Math.sin(t * 1.8 + zone.center.lng * 0.1) * (selected ? 0.18 : 0.1);
+
+    if (ringRef.current) {
+      ringRef.current.scale.setScalar(pulse);
+      (ringRef.current.material as THREE.MeshBasicMaterial).opacity = selected
+        ? 0.9 + Math.sin(t * 2) * 0.1
+        : 0.55 + Math.sin(t * 1.6) * 0.2;
+    }
+    if (haloRef.current) {
+      haloRef.current.scale.setScalar(pulse * 1.1);
+      (haloRef.current.material as THREE.MeshBasicMaterial).opacity =
+        0.12 + Math.sin(t * 1.4) * 0.05;
+    }
+    if (pillarRef.current) {
+      pillarRef.current.scale.y =
+        1 + Math.sin(t * 2 + zone.center.lat * 0.2) * 0.2;
+      (pillarRef.current.material as THREE.MeshBasicMaterial).opacity =
+        0.55 + Math.sin(t * 1.5) * 0.3;
+    }
+  });
+
+  return (
+    <group>
+      {/* Halo fill */}
+      <mesh ref={haloRef} position={pos} quaternion={q}>
+        <circleGeometry args={[scale * 1.3, 40]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.12}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Ring border */}
+      <mesh ref={ringRef} position={pos} quaternion={q}>
+        <ringGeometry args={[scale * 0.78, scale, 48]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.6}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Light pillar */}
+      <mesh ref={pillarRef} position={pillarPos} quaternion={pillarQ}>
+        <cylinderGeometry args={[0.004, 0.012, pillarH, 6]} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} />
+      </mesh>
+      {/* Core dot — always very visible */}
+      <mesh position={ll2v(zone.center.lat, zone.center.lng, 1.008)}>
+        <sphereGeometry args={[selected ? 0.012 : 0.009, 10, 10]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+    </group>
+  );
+}
+
+// ─── Zone HTML label ────────────────────────────────────────────────────────
+function ZoneLabel({ zone, onClick }: { zone: Zone; onClick: () => void }) {
+  const color = RISK_COLORS[zone.risk_level];
+  const pos = ll2v(zone.center.lat, zone.center.lng, 1.09);
+  return (
+    <Html
+      position={pos.toArray()}
+      center
+      distanceFactor={3.2}
+      zIndexRange={[0, 10]}
+    >
+      <button
+        onClick={onClick}
+        style={{
+          fontFamily: "Space Mono, monospace",
+          fontSize: 9,
+          color,
+          background: "rgba(8,12,20,0.88)",
+          border: `1px solid ${color}55`,
+          borderRadius: 4,
+          padding: "2px 6px",
+          whiteSpace: "nowrap",
+          letterSpacing: "0.07em",
+          cursor: "pointer",
+          outline: "none",
+          textShadow: `0 0 8px ${color}`,
+          boxShadow: `0 0 12px rgba(0,0,0,0.6)`,
+          transition: "all 0.15s",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background =
+            `${color}22`;
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background =
+            "rgba(8,12,20,0.88)";
+        }}
+      >
+        {zone.name}
+      </button>
+    </Html>
+  );
+}
+
+// ─── User location marker ───────────────────────────────────────────────────
+function UserMarker({
+  lat,
+  lng,
+  continent,
+}: {
+  lat: number;
+  lng: number;
+  continent: string;
+}) {
+  const ring1 = useRef<THREE.Mesh>(null);
+  const ring2 = useRef<THREE.Mesh>(null);
+  const pos = ll2v(lat, lng, 1.012);
+  const q = outQ(lat, lng);
+  const color = "#4d9fff";
+
+  useFrame((s) => {
+    const t = s.clock.elapsedTime;
+    if (ring1.current) {
+      ring1.current.scale.setScalar(1 + Math.sin(t * 2) * 0.28);
+      (ring1.current.material as THREE.MeshBasicMaterial).opacity =
+        0.35 + Math.sin(t * 2) * 0.2;
+    }
+    if (ring2.current) {
+      ring2.current.scale.setScalar(1 + Math.sin(t * 2 + 1) * 0.28);
+      (ring2.current.material as THREE.MeshBasicMaterial).opacity =
+        0.2 + Math.sin(t * 2 + 1) * 0.15;
+    }
+  });
+
+  return (
+    <group>
+      <mesh ref={ring1} position={pos} quaternion={q}>
+        <ringGeometry args={[0.016, 0.021, 32]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.4}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh ref={ring2} position={pos} quaternion={q}>
+        <ringGeometry args={[0.025, 0.03, 32]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.2}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Core */}
+      <mesh position={pos}>
+        <sphereGeometry args={[0.009, 12, 12]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      {/* Label */}
+      <Html
+        position={pos.toArray()}
+        center
+        distanceFactor={3}
+        zIndexRange={[0, 20]}
+      >
+        <div
+          style={{
+            fontFamily: "Space Mono, monospace",
+            fontSize: 9,
+            color: "#fff",
+            background: "rgba(8,12,20,0.92)",
+            border: `1px solid ${color}66`,
+            borderRadius: 4,
+            padding: "3px 7px",
+            whiteSpace: "nowrap",
+            marginTop: -28,
+            boxShadow: `0 0 16px ${color}44, 0 4px 12px rgba(0,0,0,0.7)`,
+            letterSpacing: "0.08em",
+          }}
+        >
+          <span style={{ color }}> YOU</span>
+          <span style={{ color: "rgba(255,255,255,0.55)" }}>
+            {" "}
+            · {continent}
+          </span>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+// ─── Full scene ─────────────────────────────────────────────────────────────
+function Scene() {
+  const { selectedZone, setSelectedZone, globePaused, riskResult } = useStore();
+
+  const arcs = useMemo(() => {
+    const hot = ZONES.filter(
+      (z) => z.risk_level === "CRITICAL" || z.risk_level === "RED",
+    );
+    return hot
+      .slice(0, hot.length - 1)
+      .map((z, i) => ({ from: z, to: hot[(i + 1) % hot.length] }));
+  }, []);
+
+  const user = riskResult?.user_coordinates ?? null;
+  const continent = riskResult?.continent ?? "your region";
+
+  return (
+    <>
+      {/* Brighter multi-point lighting so globe is clearly visible */}
+      <ambientLight intensity={1.1} />
+      <directionalLight
+        position={[4, 3, 4]}
+        intensity={1.2}
+        color="#e8f4ff"
+        castShadow
+      />
+      <directionalLight
+        position={[-4, -1, -3]}
+        intensity={0.5}
+        color="#1a4a7a"
+      />
+      <pointLight position={[0, 4, 2]} intensity={0.8} color="#4488cc" />
+      <pointLight position={[2, -3, 2]} intensity={0.4} color="#002244" />
+
+      <Particles />
+      <Stars radius={250} depth={60} count={4000} factor={3} fade speed={0.4} />
+
+      <Earth paused={globePaused} />
+      <GlobeGrid />
+      <ContinentLines />
+      <MiddleEastHighlight />
+      <Atmosphere />
+
+      {/* Zones */}
+      {ZONES.map((z) => (
+        <group key={z.id}>
+          <ZoneVisual zone={z} selected={selectedZone?.id === z.id} />
+          <ZoneLabel
+            zone={z}
+            onClick={() =>
+              setSelectedZone(selectedZone?.id === z.id ? null : z)
+            }
+          />
+        </group>
+      ))}
+
+      {/* Arcs between hotspots */}
+      {arcs.map((a, i) => (
+        <RiskArc key={i} from={a.from} to={a.to} />
+      ))}
+
+      {/* User pin */}
+      {user && (
+        <UserMarker lat={user.lat} lng={user.lng} continent={continent} />
+      )}
+
+      <OrbitControls
+        enablePan={false}
+        minDistance={1.3}
+        maxDistance={5}
+        rotateSpeed={0.4}
+        zoomSpeed={0.6}
+        autoRotate={!globePaused}
+        autoRotateSpeed={0.3}
+        enableDamping
+        dampingFactor={0.06}
+      />
+    </>
+  );
+}
+
+// ─── Skeleton loader ─────────────────────────────────────────────────────────
+export function GlobeSkeleton() {
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-[#080c14]">
+      <div className="text-center space-y-6">
+        {/* Animated concentric rings */}
+        <div className="relative w-24 h-24 mx-auto">
+          <div
+            className="absolute inset-0 rounded-full border border-[#4d9fff]/10 animate-ping"
+            style={{ animationDuration: "2s" }}
+          />
+          <div
+            className="absolute inset-2 rounded-full border border-[#4d9fff]/20 animate-ping"
+            style={{ animationDuration: "2.4s", animationDelay: "0.4s" }}
+          />
+          <div
+            className="absolute inset-4 rounded-full border-2 border-[#4d9fff]/30 animate-spin"
+            style={{ animationDuration: "3s" }}
+          />
+          <div
+            className="absolute inset-7 rounded-full border border-[#4d9fff]/50 animate-spin"
+            style={{ animationDuration: "1.5s", animationDirection: "reverse" }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-[#4d9fff]/60 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Skeleton text bars */}
+        <div className="space-y-2 w-48 mx-auto">
+          <div className="h-2 rounded-full bg-white/8 animate-pulse" />
+          <div
+            className="h-2 rounded-full bg-white/5 animate-pulse w-3/4 mx-auto"
+            style={{ animationDelay: "0.2s" }}
+          />
+        </div>
+
+        <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.35em] animate-pulse">
+          Loading Globe...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Canvas export ───────────────────────────────────────────────────────────
+export function GlobeScene() {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 2.7], fov: 42 }}
+      gl={{
+        antialias: true,
+        alpha: false,
+        powerPreference: "high-performance",
+      }}
+      dpr={[1, 2]}
+      style={{ background: "#080c14" }}
+    >
+      <Suspense fallback={null}>
+        <Scene />
+      </Suspense>
+    </Canvas>
+  );
+}
