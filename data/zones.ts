@@ -1,4 +1,4 @@
-import type { Zone } from "@/types";
+//import type { Zone } from "@/types";
 
 export const ZONES: Zone[] = [
   {
@@ -333,3 +333,57 @@ export const ADVISORIES = [
     date: "Dec 10 2024",
   },
 ];
+
+export const EMBASSIES: Record<
+  string,
+  { phone: string; emergency: string; city: string; website: string }
+> = {
+  "Palestinian Territories": {
+    phone: "+972-3-519-7575",
+    emergency: "+972-3-519-7575",
+    city: "Tel Aviv",
+    website: "https://il.usembassy.gov",
+  },
+  Lebanon: {
+    phone: "+961-4-543-600",
+    emergency: "+961-4-543-600",
+    city: "Beirut",
+    website: "https://lb.usembassy.gov",
+  },
+  Syria: {
+    phone: "Suspended",
+    emergency: "+20-2-2797-3300",
+    city: "—",
+    website: "https://sy.usembassy.gov",
+  },
+  Iraq: {
+    phone: "+964-760-030-3000",
+    emergency: "+964-760-030-3000",
+    city: "Baghdad",
+    website: "https://iq.usembassy.gov",
+  },
+  Yemen: {
+    phone: "Suspended",
+    emergency: "+966-11-488-3800",
+    city: "—",
+    website: "https://ye.usembassy.gov",
+  },
+  "Iran / Iraq": {
+    phone: "+962-6-590-6000",
+    emergency: "+962-6-590-6500",
+    city: "Amman",
+    website: "https://jo.usembassy.gov",
+  },
+  Egypt: {
+    phone: "+20-2-2797-3300",
+    emergency: "+20-2-2797-3300",
+    city: "Cairo",
+    website: "https://eg.usembassy.gov",
+  },
+  "Turkey / Iraq / Syria": {
+    phone: "+90-312-455-5555",
+    emergency: "+90-312-455-5555",
+    city: "Ankara",
+    website: "https://tr.usembassy.gov",
+  },
+};
